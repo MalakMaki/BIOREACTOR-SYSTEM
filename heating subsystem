@@ -1,1 +1,49 @@
+const byte thermistorpin = A0, PIoutpin = 10;
+const float Tset = 35, Vcc = 5, R = 10000, Ro = 10000, To = 25, beta = 3700, Kadc = 3.3 / 4096;
+const float ki = 0.0168, kp = 1177, kHeater = 1023.0 / 3000.0;  // PIoutpin (0–1023 PWM) scales to 0–3000 W
+
+float Vadc, T, Rth, deltat, Te, KIIntTe;
+long currtime, prevtime, lastUpdate;
+int HeaterPower;
+
+void setup() {
+  pinMode(thermistorpin, INPUT);
+  pinMode(PIoutpin, OUTPUT);
+
+  Serial.begin(9600);   // ✅ start serial communication
+
+  analogWrite(PIoutpin, 1023);  // heater always ON
+  lastUpdate = micros();
+}
+
+void loop() {
+  currtime = micros();
+  deltat = (currtime - prevtime) * 1e-6;
+
+  if (currtime - lastUpdate > 100000) {  // every 100 ms
+    prevtime = currtime;
+    lastUpdate = currtime;
+
+    int rawADC = analogRead(thermistorpin);   // raw ADC value (0–1023)
+    Vadc = rawADC * Kadc;                     // convert to volts
+
+    Serial.print("Raw ADC: ");
+    Serial.print(rawADC);
+    Serial.print("  |  Voltage: ");
+    Serial.print(Vadc, 3); // 3 decimal places
+    Serial.println(" V");
+
+    // continue with your calculations if needed
+    Rth = R * Vadc / (Vcc - Vadc);
+    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0;
+    Te = Tset - T;
+
+    KIIntTe += ki * Te * deltat;
+    KIIntTe = constrain(KIIntTe, 0, 3000);
+    HeaterPower = round(kp * Te + KIIntTe);
+    HeaterPower = kHeater * constrain(HeaterPower, 0, 3000);
+
+    analogWrite(PIoutpin, HeaterPower);
+  }
+}
 
