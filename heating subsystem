@@ -1,5 +1,6 @@
 const byte thermistorpin = A0, PIoutpin = 10;
-const float Tset = 35, Vcc = 5, R = 10000, Ro = 10000, To = 25, beta = 3700, Kadc = 3.3 / 4096;
+const float Tset = 35, Vcc = 5, R = 10000, Ro = 10000, To = 25, beta = 3700;
+const float Kadc = 3.3 / 4096.0;
 const float ki = 0.0168, kp = 1177, kHeater = 1023.0 / 3000.0;  // PIoutpin (0–1023 PWM) scales to 0–3000 W
 
 float Vadc, T, Rth, deltat, Te, KIIntTe;
@@ -26,17 +27,19 @@ void loop() {
 
     int rawADC = analogRead(thermistorpin);   // raw ADC value (0–1023)
     Vadc = rawADC * Kadc;                     // convert to volts
-
-    Serial.print("Raw ADC: ");
-    Serial.print(rawADC);
+    //Serial.print("Raw ADC: ");
+    //Serial.print(rawADC);
     Serial.print("  |  Voltage: ");
     Serial.print(Vadc, 3); // 3 decimal places
     Serial.println(" V");
 
     // continue with your calculations if needed
     Rth = R * Vadc / (Vcc - Vadc);
-    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0;
+    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 31;
     Te = Tset - T;
+    Serial.print("Temperature:");
+    Serial.print(T);
+    Serial.print("  |  Voltage: ");
 
     KIIntTe += ki * Te * deltat;
     KIIntTe = constrain(KIIntTe, 0, 3000);
@@ -46,4 +49,3 @@ void loop() {
     analogWrite(PIoutpin, HeaterPower);
   }
 }
-
