@@ -10,9 +10,9 @@
 #include "esp_eap_client.h"  // For enterprise WiFi (eduroam)
 
 // FOR EDUROAM (uncomment and use these instead):
-const char* ssid = "eduroam";
-const char* user = "zcabnlm@ucl.ac.uk";
-const char* password = "CocoLia2006!?!";
+const char* ssid = "";
+const char* user = "";
+const char* password = "";
 const bool useEnterpriseWiFi = true;
 
 // ========== MQTT CONFIGURATION ==========
