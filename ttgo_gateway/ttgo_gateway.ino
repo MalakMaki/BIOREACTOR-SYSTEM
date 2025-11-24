@@ -7,16 +7,13 @@
 #include <WiFi.h>
 #include <PicoMQTT.h>
 #include <TFT_eSPI.h>
-#include "esp_wpa2.h"  // For enterprise WiFi (eduroam)
+#include "esp_eap_client.h"  // For enterprise WiFi (eduroam)
 
-// ========== WiFi CONFIGURATION ==========
-// For enterprise WiFi (eduroam/WPA2-Enterprise):
+// FOR EDUROAM (uncomment and use these instead):
 const char* ssid = "eduroam";
-const char* user = "zcabnlm@ucl.ac.uk"
+const char* user = "zcabnlm@ucl.ac.uk";
 const char* password = "CocoLia2006!?!";
-
-// Set to true for enterprise WiFi (eduroam), false for simple WiFi
-const bool useEnterpriseWiFi = true;  // Change to false if using home WiFi
+const bool useEnterpriseWiFi = true;
 
 // ========== MQTT CONFIGURATION ==========
 const char* mqtt_server = "broker.hivemq.com";
@@ -143,11 +140,11 @@ void connectWiFi() {
   WiFi.mode(WIFI_STA);
   
   if (useEnterpriseWiFi) {
-    // Enterprise WiFi (eduroam/WPA2-Enterprise)
-    esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)user, strlen(user));
-    esp_wifi_sta_wpa2_ent_set_username((uint8_t *)user, strlen(user));
-    esp_wifi_sta_wpa2_ent_set_password((uint8_t *)password, strlen(password));
-    esp_wifi_sta_wpa2_ent_enable();
+    // Enterprise WiFi (eduroam/WPA2-Enterprise) - using new API
+    esp_eap_client_set_identity((uint8_t *)user, strlen(user));
+    esp_eap_client_set_username((uint8_t *)user, strlen(user));
+    esp_eap_client_set_password((uint8_t *)password, strlen(password));
+    esp_wifi_sta_enterprise_enable();
     WiFi.begin(ssid);
   } else {
     // Simple WiFi (WPA2-Personal)
