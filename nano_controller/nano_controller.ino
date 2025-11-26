@@ -167,16 +167,14 @@ void loop() {
     int rawADC = analogRead(TEMP_SENSOR_PIN);
     float Vadc = rawADC * Kadc;
     float Rth = R * Vadc / (Vcc - Vadc);
-    // currentTemp = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 31;
-    currentTemp = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 21; // Line38 in heating_subsystem.ino
+    currentTemp = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 21; // Line58 in heating_subsystem.ino
 
     error_temp = setTemp - currentTemp;
     KIinterror_temp += KI_temp * error_temp * deltat;
     KIinterror_temp = constrain(KIinterror_temp, 0, 3000);
     
-    // float heaterPower = Kp_temp * error_temp + KIinterror_temp;
-    float heaterPower = round(kp * Te + KIIntTe); // Line46 in heating_subsystem.ino
-    heaterPWM = kHeater * constrain((int)heaterPower, 0, 3000);
+    float heaterPower = round((kp * Te + KIIntTe) * kHeater); // Line70 in heating_subsystem.ino
+    heaterPWM = constrain((int)heaterPower, 0, 1023); // Line71 in heating_subsystem.ino
     analogWrite(HEATER_PWM_PIN, heaterPWM);
     
     // ===== pH CONTROL =====
