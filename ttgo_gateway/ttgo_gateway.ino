@@ -7,13 +7,10 @@
 #include <WiFi.h>
 #include <PicoMQTT.h>
 #include <TFT_eSPI.h>
-#include "esp_eap_client.h"  // For enterprise WiFi (eduroam)
+#include "esp_eap_client.h"
+#include "credentials.h"
 
-// FOR EDUROAM (uncomment and use these instead):
-const char* ssid = "";
-const char* user = "";
-const char* password = "";
-const bool useEnterpriseWiFi = true;
+// WiFi credentials are now loaded from credentials.h
 
 // ========== MQTT CONFIGURATION ==========
 const char* mqtt_server = "broker.hivemq.com";
@@ -130,7 +127,7 @@ void loop() {
 // ========== WiFi CONNECTION ==========
 void connectWiFi() {
   Serial.print("Connecting to WiFi: ");
-  Serial.println(ssid);
+  Serial.println(WIFI_SSID);
   
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(0, 0);
@@ -139,16 +136,16 @@ void connectWiFi() {
   WiFi.disconnect(true);
   WiFi.mode(WIFI_STA);
   
-  if (useEnterpriseWiFi) {
+  if (USE_ENTERPRISE) {
     // Enterprise WiFi (eduroam/WPA2-Enterprise) - using new API
-    esp_eap_client_set_identity((uint8_t *)user, strlen(user));
-    esp_eap_client_set_username((uint8_t *)user, strlen(user));
-    esp_eap_client_set_password((uint8_t *)password, strlen(password));
+    esp_eap_client_set_identity((uint8_t *)WIFI_USER, strlen(WIFI_USER));
+    esp_eap_client_set_username((uint8_t *)WIFI_USER, strlen(WIFI_USER));
+    esp_eap_client_set_password((uint8_t *)WIFI_PASSWORD, strlen(WIFI_PASSWORD));
     esp_wifi_sta_enterprise_enable();
-    WiFi.begin(ssid);
+    WiFi.begin(WIFI_SSID);
   } else {
     // Simple WiFi (WPA2-Personal)
-    WiFi.begin(ssid, password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
   
   int attempts = 0;
@@ -196,12 +193,13 @@ void readUARTData() {
       
       lastDataReceived = millis();
       
+      // Simple, clean output
       Serial.print("Received: ");
-      Serial.print(sensorRPM);
+      Serial.print(sensorRPM, 1);
       Serial.print(" RPM, ");
-      Serial.print(sensorTemp);
+      Serial.print(sensorTemp, 2);
       Serial.print(" °C, pH ");
-      Serial.println(sensorpH);
+      Serial.println(sensorpH, 2);
     }
   }
 }

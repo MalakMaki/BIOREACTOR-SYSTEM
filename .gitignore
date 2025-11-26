@@ -1,0 +1,19 @@
+# Arduino credentials
+**/credentials.h
+
+# Arduino build files
+**/.build/
+**/build/
+**/*.hex
+**/*.elf
+**/*.bin
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Backup files
+**/*~
+**/*.bak
