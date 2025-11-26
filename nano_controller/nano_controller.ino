@@ -58,7 +58,7 @@ const float KI_temp = 0.0168;
 const float kHeater = 1023.0 / 3000.0;
 
 // Heating variables
-float setTemp = 30.0;              // Default setpoint (°C)
+float setTemp = 35.0;              // Default setpoint (°C)
 float currentTemp = 0.0;
 float error_temp = 0.0;
 float KIinterror_temp = 0.0;
@@ -167,13 +167,15 @@ void loop() {
     int rawADC = analogRead(TEMP_SENSOR_PIN);
     float Vadc = rawADC * Kadc;
     float Rth = R * Vadc / (Vcc - Vadc);
-    currentTemp = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 31;
-    
+    // currentTemp = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 31;
+    currentTemp = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 21; // Line38 in heating_subsystem.ino
+
     error_temp = setTemp - currentTemp;
     KIinterror_temp += KI_temp * error_temp * deltat;
     KIinterror_temp = constrain(KIinterror_temp, 0, 3000);
     
-    float heaterPower = Kp_temp * error_temp + KIinterror_temp;
+    // float heaterPower = Kp_temp * error_temp + KIinterror_temp;
+    float heaterPower = round(kp * Te + KIIntTe); // Line46 in heating_subsystem.ino
     heaterPWM = kHeater * constrain((int)heaterPower, 0, 3000);
     analogWrite(HEATER_PWM_PIN, heaterPWM);
     
