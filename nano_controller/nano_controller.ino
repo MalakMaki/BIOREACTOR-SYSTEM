@@ -58,7 +58,7 @@ const float KI_temp = 0.0168;
 const float kHeater = 1023.0 / 3000.0;
 
 // Heating variables
-float setTemp = 30.0;              // Default setpoint (°C)
+float setTemp = 35.0;              // Default setpoint (°C)
 float currentTemp = 0.0;
 float error_temp = 0.0;
 float KIinterror_temp = 0.0;
