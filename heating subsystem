@@ -1,52 +1,82 @@
-const byte thermistorpin = A0, PIoutpin = D10;
-const float Tset = 35, Vcc = 5, R = 10000, Ro = 10000, To = 25, beta = 3700;
+// ===== PIN DEFINITIONS =====
+const byte thermistorpin = A0;
+const byte PIoutpin = D10;
+
+// ===== CONSTANTS =====
+const float Tset = 35;               // temperature setpoint
+const float Vcc = 5;
+const float R = 10000;
+const float Ro = 10000;
+const float To = 25;
+const float beta = 3700;
 const float Kadc = 3.3 / 4096.0;
-const float ki = 0.0168, kp = 1177, kHeater = 1023.0 / 3000.0;  // PIoutpin (0–1023 PWM) scales to 0–3000 W
 
-float Vadc, T, Rth, deltat, Te, KIIntTe;
+// PI controller parameters (same as bioreactor code)
+const float ki = 0.0168;
+const float kp = 1177;
+const float kHeater = 1023.0 / 3000.0;  // convert heater power (0–3000) → PWM (0–1023)
+
+// ===== WORKING VARIABLES =====
+float Vadc, T, Rth;
+float deltat;
+float Te;                 // temperature error
+float KIIntTe = 0;        // integral error
+int HeaterPower = 0;
+
 long currtime, prevtime, lastUpdate;
-int HeaterPower;
 
+// ===== SETUP =====
 void setup() {
   pinMode(thermistorpin, INPUT);
   pinMode(PIoutpin, OUTPUT);
 
-  Serial.begin(9600);   // ✅ start serial communication
+  Serial.begin(9600);
 
-  analogWrite(PIoutpin, 1023);  // heater always ON
+  analogWrite(PIoutpin, 0);      // heater starts OFF
   lastUpdate = micros();
+  prevtime = micros();
 }
 
+
+// ===== MAIN LOOP =====
 void loop() {
   currtime = micros();
-  deltat = (currtime - prevtime) * 1e-6;
+  deltat = (currtime - prevtime) * 1e-6;     // seconds
 
-  if (currtime - lastUpdate > 100000) {  // every 100 ms
+  // Run every 100ms (100,000 µs)
+  if (currtime - lastUpdate > 100000) {
+
     prevtime = currtime;
     lastUpdate = currtime;
 
-    int rawADC = analogRead(thermistorpin);   // raw ADC value (0–1023)
-    Vadc = rawADC * Kadc;                    // convert to volts
-    //Serial.print("Raw ADC: ");
-    //Serial.print(rawADC);
-    Serial.print("  |  Voltage: ");
-    Serial.print(Vadc, 3); // 3 decimal places
-    Serial.println(" V");
+    // ===== 1. READ THERMISTOR =====
+    int rawADC = analogRead(thermistorpin);
+    Vadc = rawADC * Kadc;
 
-    // continue with your calculations if needed
+    // Thermistor calculation
     Rth = R * Vadc / (Vcc - Vadc);
-    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 21;
-    Te = Tset - T;
-    Serial.print("Temperature:");
-    Serial.print(T);
-    Serial.print("  |  Voltage: ");
+    T = (To + 273.0) * beta /
+        (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 21;
 
-    KIIntTe += ki * Te * deltat;
+    // ===== 2. PI TEMPERATURE CONTROL =====
+    Te = Tset - T;                      // error
+    KIIntTe += ki * Te * deltat;        // integrate
     KIIntTe = constrain(KIIntTe, 0, 3000);
-    HeaterPower = round(kp * Te + KIIntTe);
-    HeaterPower = kHeater * constrain(HeaterPower, 0, 3000 * 0.8);
-    // connected resistor to gate pin as well
 
-    analogWrite(PIoutpin, 1023);
+    int controlSignal = kp * Te + KIIntTe;
+    controlSignal = constrain(controlSignal, 0, 3000);
+
+    // Convert control power → PWM (0–1023)
+    HeaterPower = round(controlSignal * kHeater);
+    HeaterPower = constrain(HeaterPower, 0, 1023);
+
+    // ===== 3. OUTPUT TO HEATER =====
+    analogWrite(PIoutpin, HeaterPower);
+
+    // ===== 4. PRINT DATA =====
+    Serial.print("T = ");
+    Serial.print(T, 2);
+    Serial.print(" °C | PWM = ");
+    Serial.println(HeaterPower);
   }
 }
