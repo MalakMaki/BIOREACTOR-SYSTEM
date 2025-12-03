@@ -26,8 +26,8 @@ const char* topic_set_ph = "bioreactor/setpoint/ph";
 
 // ========== UART CONFIGURATION ==========
 // TTGO T-Display UART pins (verify with your board pinout)
-#define RXD2 16
-#define TXD2 17
+#define RXD2 21
+#define TXD2 22
 
 // ========== TFT DISPLAY ==========
 TFT_eSPI tft = TFT_eSPI();
