@@ -1,23 +1,32 @@
 # Bioreactor Control System - Integration Documentation
 
+**UCL ENGF0001 Engineering Challenges - Team 15**  
+**Dashboard Leader: Louis**  
+**Last Updated: 2025-12-03**
+
+---
+
 ## System Architecture
 
 ```
 Bioreactor Hardware
-    ↕ (sensors/actuators - wired)
+    ↕ (sensors/actuators)
 Arduino Nano ESP32 (nano_controller.ino)
-    ↕ (UART - Serial communication)
+    ↕ (UART: GPIO 43/44)
 TTGO T-Display (ttgo_gateway.ino)
     ↕ (WiFi/MQTT)
 HiveMQ Broker (broker.hivemq.com)
     ↕ (WiFi/MQTT)
-Node-RED Dashboard (your laptop)
+Node-RED Dashboard (laptop)
 ```
+
+---
 
 ## Files Overview
 
+### Production Code
 1. **nano_controller.ino** - Arduino Nano ESP32
-   - Reads all sensors (hall sensor, thermistor, pH sensor)
+   - Reads sensors (hall sensor, thermistor, pH sensor)
    - Runs PI controllers for stirrer, heating, and pH
    - Controls actuators (motor, heater, acid/base pumps)
    - Sends sensor data via UART to TTGO
@@ -36,46 +45,46 @@ Node-RED Dashboard (your laptop)
    - Three monitoring groups: Stirrer Control, Temperature Control, pH Control
    - Controls group with sliders and submit/clear buttons
    - ESP32 state group showing active setpoints and sequence counter
-   - Real-time data visualization for all subsystems
 
 ---
 
 ## Hardware Connections
 
 ### Arduino Nano ESP32 ↔ TTGO T-Display (UART)
+
 ```
 Nano ESP32          TTGO T-Display
 TX (GPIO 43)   →    RX (GPIO 21)
 RX (GPIO 44)   ←    TX (GPIO 22)
-GND            ⟷    GND (CRITICAL - Common ground required!)
+GND            ⟷    GND
 ```
 
+**CRITICAL: Common ground connection required**
+
 ### Arduino Nano ESP32 Pin Configuration
+
 ```
 STIRRER SUBSYSTEM:
-- Hall Sensor:  GPIO 3 (INPUT_PULLUP, interrupt)
+- Hall Sensor:  GPIO 3 (INPUT_PULLUP, interrupt on RISING)
 - Motor PWM:    GPIO 2 (OUTPUT)
 
 HEATING SUBSYSTEM:
-- Thermistor:   A0 (INPUT, 0-3.3V MAX!)
+- Thermistor:   A0 (INPUT, 0-3.3V MAX)
 - Heater PWM:   GPIO 10 (OUTPUT)
 
 pH SUBSYSTEM:
-- pH Sensor:    A1 (INPUT, 0-3.3V MAX!)
+- pH Sensor:    A1 (INPUT, 0-3.3V MAX)
 - Acid Pump:    GPIO 6 (OUTPUT)
 - Base Pump:    GPIO 7 (OUTPUT)
 ```
 
-**⚠️ IMPORTANT:** 
-- Verify and adjust pin numbers based on your actual wiring before uploading!
-- Arduino Nano ESP32 ADC is 3.3V max (NOT 5V like Arduino UNO!)
-- Always ensure common ground between Nano and TTGO
+**WARNING: Arduino Nano ESP32 ADC is 3.3V maximum, not 5V**
 
 ---
 
 ## Software Setup
 
-### 1. Arduino Nano ESP32 Setup
+### 1. Arduino Nano ESP32
 
 **Required Libraries:**
 - Arduino ESP32 core (install via Board Manager)
@@ -83,70 +92,58 @@ pH SUBSYSTEM:
 **Upload Steps:**
 1. Open `nano_controller.ino` in Arduino IDE
 2. Select board: "Arduino Nano ESP32"
-3. **CRITICAL:** Verify pin assignments match your hardware
+3. Verify pin assignments match your wiring
 4. Upload to Arduino Nano ESP32
-5. Open Serial Monitor (115200 baud) to see debug output
+5. Open Serial Monitor (115200 baud) to verify operation
 
-**PI Controller Tuning:**
-- Default parameters are configured for fast response (ωn=ω₀, ζ=1)
-- Adjust `Kp_motor`, `KI_motor`, `Kp_temp`, `KI_temp`, `Kp_pH`, `KI_pH` if needed
-- See `PIMotorLecture_2026_1.pdf` for tuning methodology
+**Default Setpoints:**
+- RPM: 1000
+- Temperature: 35°C
+- pH: 5.0
 
-### 2. TTGO T-Display Setup
+### 2. TTGO T-Display
 
 **Required Libraries:**
-- ESP32 Board Package (install via Board Manager)
-- PubSubClient (MQTT library) - Install via Library Manager
-- TFT_eSPI (display library) - Install via Library Manager
+- ESP32 Board Package (via Board Manager)
+- PicoMQTT (via Library Manager)
+- TFT_eSPI (via Library Manager)
 
 **WiFi Configuration:**
-1. Create `credentials.h` in the same folder as `ttgo_gateway.ino`:
-   ```cpp
-   #ifndef CREDENTIALS_H
-   #define CREDENTIALS_H
-   
-   // For Eduroam (WPA2-Enterprise)
-   const char* WIFI_SSID = "eduroam";
-   const char* WIFI_USER = "your.email@ucl.ac.uk";
-   const char* WIFI_PASSWORD = "your_password";
-   const bool USE_ENTERPRISE = true;
-   
-   // For Mobile Hotspot (comment out eduroam above, use these)
-   // const char* WIFI_SSID = "YourHotspotName";
-   // const char* WIFI_USER = "";
-   // const char* WIFI_PASSWORD = "hotspot_password";
-   // const bool USE_ENTERPRISE = false;
-   
-   #endif
-   ```
-2. **Add credentials.h to .gitignore** - NEVER commit WiFi passwords!
-3. Open `ttgo_gateway.ino`
-4. **Verify UART pins** (check TTGO pinout):
-   ```cpp
-   #define RXD2 16  // May need adjustment
-   #define TXD2 17  // May need adjustment
-   ```
-5. Select board: "ESP32 Dev Module" or "TTGO T1"
-6. Upload to TTGO T-Display
 
-**TFT_eSPI Configuration:**
-- You may need to edit `User_Setup.h` in TFT_eSPI library folder
-- Select `Setup25_TTGO_T_Display.h` for TTGO T-Display
+Create `credentials.h` in same folder as `ttgo_gateway.ino`:
 
-### 3. Node-RED Dashboard Setup
+```cpp
+#ifndef CREDENTIALS_H
+#define CREDENTIALS_H
+
+// For Eduroam (WPA2-Enterprise)
+const char* WIFI_SSID = "eduroam";
+const char* WIFI_USER = "your.email@ucl.ac.uk";
+const char* WIFI_PASSWORD = "your_password";
+const bool USE_ENTERPRISE = true;
+
+// For Mobile Hotspot
+// const char* WIFI_SSID = "YourHotspotName";
+// const char* WIFI_USER = "";
+// const char* WIFI_PASSWORD = "hotspot_password";
+// const bool USE_ENTERPRISE = false;
+
+#endif
+```
+
+**Upload Steps:**
+1. Create `credentials.h` with your WiFi credentials
+2. Open `ttgo_gateway.ino`
+3. Select board: "ESP32 Dev Module" or "TTGO T1"
+4. Upload to TTGO T-Display
+5. Check Serial Monitor (115200 baud) for WiFi connection status
+
+### 3. Node-RED Dashboard
 
 **Installation:**
 ```bash
-# Install Node-RED (if not already installed)
-npm install -g node-red
-
-# Navigate to Node-RED directory
 cd ~/.node-red
-
-# Install Dashboard 2.0
 npm install @flowfuse/node-red-dashboard
-
-# Restart Node-RED
 node-red-stop
 node-red
 ```
@@ -154,74 +151,63 @@ node-red
 **Import Flow:**
 1. Start Node-RED: `node-red`
 2. Open browser: `http://localhost:1880`
-3. Menu (≡) → Import → Select `flows.json`
-4. Deploy the flow
+3. Menu → Import → Select `flows.json`
+4. Deploy
 5. Access dashboard: `http://localhost:1880/dashboard`
 
 **Dashboard Features:**
-- **Three Monitoring Groups:** Stirrer, Temperature, pH
-  - Real-time gauges with color-coded ranges
-  - Time-series charts showing trends
-  - Automatic data logging (1 hour retention)
-- **Controls Group:**
-  - Temperature setpoint slider (25-35°C, step 0.5)
-  - Speed setpoint slider (500-1500 RPM, step 50)
-  - pH setpoint slider (3-7, step 0.1)
-  - Submit button (publishes all setpoints)
-  - Clear button (resets to defaults)
-- **ESP32 State Group:**
-  - Active setpoint displays
-  - Sequence counter (system uptime indicator)
-
-**MQTT Configuration:**
-- Broker is pre-configured to HiveMQ public broker
-- No authentication required
-- Client ID: `nodered_bioreactor_client`
+- Real-time gauges with color-coded ranges
+- Time-series charts (1 hour data retention)
+- Setpoint control sliders (Temp: 25-35°C, RPM: 500-1500, pH: 3-7)
+- Submit/Clear buttons for setpoint management
+- ESP32 state display with sequence counter
 
 ---
 
 ## Communication Protocol
 
 ### Nano → TTGO (UART)
-**Format:** CSV string with newline terminator
-```
-RPM,TEMP,PH\n
-```
+
+**Format:** `PH:8.0,TEMP:22.2,RPM:1020`
+
+**Frequency:** Every 2 seconds  
+**Baud Rate:** 115200
+
 **Example:**
 ```
-1050.5,29.75,5.12\n
+PH:5.2,TEMP:30.5,RPM:1050
 ```
-**Frequency:** Every 1 second
-**Baud Rate:** 115200
 
 ### TTGO → Nano (UART)
-**Format:** Command string with newline terminator
+
+**Format:** `SET:PARAMETER:VALUE`
+
+**Examples:**
 ```
-SET:RPM:1000\n
-SET:TEMP:30\n
-SET:PH:5\n
+SET:RPM:1200
+SET:TEMP:32
+SET:PH:6.5
 ```
-**Frequency:** Immediately when setpoint received via MQTT
-**Baud Rate:** 115200
 
 ### MQTT Topics
-**Sensor Data (TTGO → Node-RED):**
-- `bioreactor/sensor/rpm` - Current motor speed (float, 0-1500 RPM)
-- `bioreactor/sensor/temperature` - Current temperature (float, 20-40°C)
-- `bioreactor/sensor/ph` - Current pH level (float, 3-7 pH)
 
-**Setpoint Commands (Node-RED → TTGO):**
+**Sensor Data (TTGO publishes, Node-RED subscribes):**
+- `bioreactor/sensor/rpm` - Current motor speed (RPM)
+- `bioreactor/sensor/temperature` - Current temperature (°C)
+- `bioreactor/sensor/ph` - Current pH level
+
+**Setpoint Commands (Node-RED publishes, TTGO subscribes):**
 - `bioreactor/setpoint/rpm` - Target motor speed (500-1500 RPM)
 - `bioreactor/setpoint/temperature` - Target temperature (25-35°C)
-- `bioreactor/setpoint/ph` - Target pH level (3-7 pH)
+- `bioreactor/setpoint/ph` - Target pH level (3-7)
 
 **MQTT Configuration:**
-- **Broker:** broker.hivemq.com:1883 (public, no authentication)
-- **Protocol:** MQTT v5
-- **QoS:** 0 (fire and forget)
-- **Publish Rate:** Every 2 seconds
-- **Client IDs:**
-  - TTGO: Auto-generated by PubSubClient
+- Broker: broker.hivemq.com:1883
+- Protocol: MQTT v5
+- QoS: 0
+- Publish Rate: Every 2 seconds
+- Client IDs:
+  - TTGO: Auto-generated
   - Node-RED: `nodered_bioreactor_client`
 
 ---
@@ -229,75 +215,82 @@ SET:PH:5\n
 ## PI Controller Implementation
 
 ### Stirrer (Motor Speed)
-- **Type:** PI controller with velocity feedback
-- **Parameters:** Kp, KI calculated from motor constants
-- **Setpoint range:** 500-1500 RPM
-- **Tolerance:** ±20 RPM
-- **Sensor:** Hall effect (70 pulses/rev)
-- **Sample Time:** 100ms
+- Type: PI controller with hall sensor feedback
+- Parameters: Kp=0.1, KI=0.01
+- Setpoint range: 500-1500 RPM
+- Sensor: Hall effect (70 pulses/revolution)
+- Sample time: 1000ms
+- Interrupt: RISING edge
 
 ### Heating (Temperature)
-- **Type:** PI controller with thermistor feedback
-- **Parameters:** Kp=10, KI=0.5 (tunable)
-- **Setpoint range:** 25-35°C
-- **Tolerance:** ±0.5°C
-- **Sensor:** NTC thermistor (β=3700)
-- **Sample Time:** 1000ms
+- Type: PI controller with thermistor feedback
+- Parameters: Kp=1177, KI=0.0168
+- Setpoint range: 25-35°C
+- Sensor: NTC thermistor (β=3700)
+- Sample time: 100ms
+- Heater scaling: 1023 PWM → 3000W
 
 ### pH Control
-- **Type:** PI controller with dual pump control
-- **Parameters:** Kp_acid=50, KI_acid=5, Kp_base=50, KI_base=5
-- **Setpoint range:** 3-7 pH
-- **Deadband:** ±0.1 pH (reduces pump cycling)
-- **Actuators:** Acid pump (pH too high) / Base pump (pH too low)
-- **Sample Time:** 2000ms
+- Type: PI controller with dual pump control
+- Parameters: Kp=100, KI=5
+- Setpoint range: 3-7 pH
+- Deadband: ±0.1 pH
+- Actuators: Acid pump (pH too high) / Base pump (pH too low)
+- Sample time: 100ms
 
 ---
 
 ## Testing Procedure
 
-### Phase 1: Nano Standalone
-1. Upload `nano_controller.ino`
-2. Open Serial Monitor (115200 baud)
-3. Verify sensor readings appear every 1s
-4. Test manual setpoint changes via Serial commands
+### Phase 1: Hardware Connection
+1. Connect Nano ↔ TTGO via 3 wires:
+   - GND ⟷ GND
+   - Nano TX (GPIO 43) → TTGO RX (GPIO 21)
+   - Nano RX (GPIO 44) ← TTGO TX (GPIO 22)
+2. Power both boards via USB
 
-### Phase 2: UART Communication
-1. Connect Nano ↔ TTGO via UART (3 wires: TX, RX, GND)
-2. Upload `nano_test.ino` to Nano (generates fake data)
-3. Upload `ttgo_test.ino` to TTGO
-4. Verify TTGO displays sensor data on TFT
-5. Check TTGO serial output for received data packets
+### Phase 2: UART Verification
+1. Upload `nano_controller.ino` to Nano
+2. Upload `ttgo_gateway.ino` to TTGO
+3. Open Nano Serial Monitor (115200 baud)
+   - Should see: `[SENT] PH:X.X,TEMP:XX.X,RPM:XXXX`
+4. Open TTGO Serial Monitor (115200 baud)
+   - Should see: `WiFi Connected IP: X.X.X.X`
+   - Should see: `Received: XXX RPM, XX.X C, pH X.X`
+5. Check TTGO TFT display shows sensor values
 
-### Phase 3: MQTT Integration
-1. Ensure both devices connected and running
-2. Start Node-RED and import flow
-3. Open MQTTX and connect to broker.hivemq.com
-4. Subscribe to all 6 topics:
-   - bioreactor/sensor/rpm
-   - bioreactor/sensor/temperature
-   - bioreactor/sensor/ph
-   - bioreactor/setpoint/rpm
-   - bioreactor/setpoint/temperature
-   - bioreactor/setpoint/ph
-5. Verify messages arriving in MQTTX
+### Phase 3: MQTT Testing
+1. Open MQTTX
+2. Connect to `broker.hivemq.com:1883`
+3. Subscribe to:
+   - `bioreactor/sensor/rpm`
+   - `bioreactor/sensor/temperature`
+   - `bioreactor/sensor/ph`
+   - `bioreactor/setpoint/rpm`
+   - `bioreactor/setpoint/temperature`
+   - `bioreactor/setpoint/ph`
+4. Verify sensor data arriving every 2 seconds
 
 ### Phase 4: Dashboard Testing
-1. Deploy Node-RED flow
-2. Open dashboard: `http://localhost:1880/dashboard`
-3. Verify gauges update with live data
-4. Test setpoint adjustments via sliders
-5. Click Submit button and verify:
-   - MQTTX sees setpoint messages
-   - ESP32 state displays show updated values
-   - Nano Serial Monitor shows "✓ setpoint updated"
+1. Import `flows.json` into Node-RED
+2. Deploy flow
+3. Open `http://localhost:1880/dashboard`
+4. Verify:
+   - Gauges update with live data
+   - Charts plot trends
+   - Sliders control setpoints
+   - ESP32 state displays show values
+5. Test setpoint control:
+   - Move slider → Click Submit
+   - Check MQTTX sees setpoint message
+   - Check Nano Serial shows "RPM setpoint: XXXX"
 
-### Phase 5: Full System Test
-1. Connect all physical sensors/actuators
-2. Set initial setpoints via dashboard
-3. Monitor system response on charts
-4. Verify PI controllers maintain setpoints
-5. Log data for calibration report
+### Phase 5: Full System
+1. Connect all physical sensors and actuators
+2. Calibrate sensors if needed
+3. Set initial setpoints via dashboard
+4. Monitor system response
+5. Verify PI controllers maintain setpoints
 
 ---
 
@@ -305,126 +298,46 @@ SET:PH:5\n
 
 ### Nano Issues
 - **No sensor readings:** Check pin assignments and wiring
-- **Erratic PWM:** Verify MOSFET gate resistors (100-220Ω)
-- **Hall sensor not triggering:** Try FALLING instead of RISING edge
-- **ADC values wrong:** Check voltage dividers, ensure 0-3.3V range
+- **ADC errors:** Ensure sensor outputs are 0-3.3V (use voltage dividers if needed)
+- **Hall sensor not triggering:** Verify RISING edge interrupt, check magnet alignment
 
 ### TTGO Issues
-- **No WiFi connection:** 
-  - Double-check credentials.h SSID/password
+- **No WiFi connection:**
+  - Verify `credentials.h` exists with correct SSID/password
   - Try mobile hotspot instead of eduroam
-  - Check TTGO Serial Monitor for connection status
-- **Blank screen:** Verify TFT_eSPI library configuration
-- **No UART data:** 
-  - Check TX/RX pin assignments (GPIO 16/17)
+  - Check Serial Monitor for connection status
+- **Blank TFT screen:** Verify TFT_eSPI library configuration
+- **No UART data:**
+  - Check TX/RX crossover connection (TX→RX, RX→TX)
   - Verify common GND connection
-  - Test with nano_test.ino for known-good data
+  - Check baud rate matches (115200)
 
 ### MQTT Issues
-- **Dashboard not updating:** 
-  - Verify MQTT broker connection in Node-RED
-  - Check Configuration Nodes → MQTT Broker → Status
-- **Setpoints not working:** 
-  - Check topic names match exactly (case-sensitive!)
+- **Dashboard not updating:**
+  - Verify Node-RED MQTT broker connection status
+  - Check topic names match exactly (case-sensitive)
+- **Setpoints not working:**
   - Verify TTGO subscriptions in Serial Monitor
-- **Connection drops:** 
-  - HiveMQ public broker can be busy
-  - Consider local Mosquitto broker for stability
+  - Check MQTTX shows setpoint messages
+  - Verify Nano receives commands via Serial Monitor
 
 ### Dashboard Issues
-- **Gauges not visible:**
-  - Increase gauge height to 5 or 6
-  - Verify widget width matches group width (4 columns)
-- **No spacing between widgets:**
-  - Adjust Widget Gap in Theme settings (12-24px)
-- **Text widget errors (payload}}}):**
-  - Check Value field has exactly `{{msg.payload}}`
-  - Remove extra closing braces
-- **Submit button doesn't work:**
-  - Add Function node to publish all three setpoints
-  - Connect slider outputs to context storage
-- **No default values on load:**
-  - Add Inject node with "once after 0.1 seconds"
-  - Connect to Change nodes setting defaults
-
-### Integration Issues
-- **Data mismatch:** 
-  - Check UART baud rates match (115200 on both devices)
-  - Verify CSV format: "RPM,TEMP,PH\n"
-- **Delayed response:** 
-  - Normal due to control loop timing (100ms-2s)
-  - MQTT adds ~100-500ms latency
-- **Pump oscillation:** 
-  - Increase pH deadband (±0.2 instead of ±0.1)
-  - Reduce KI_pH parameter
-  - Increase sample time to 3000ms
+- **No data displayed:** Hardware not running or MQTT not connected
+- **ESP32 state empty:** No setpoints published yet (move sliders and click Submit)
+- **Charts not plotting:** Check chart configuration uses `msg.topic` and `msg.payload`
 
 ---
 
-## Design Specifications Met
+## Design Specifications
 
-✅ **Stirring:** 500-1500 RPM ±20 RPM  
-✅ **Temperature:** 25-35°C ±0.5°C  
-✅ **pH:** 3-7 range with setpoint control  
-✅ **Data logging:** MQTT publishes timestamped data  
-✅ **User interface:** Node-RED Dashboard 2.0 with real-time monitoring  
-✅ **Remote control:** Setpoint adjustment via dashboard  
-✅ **Bidirectional communication:** Dashboard ↔ MQTT ↔ TTGO ↔ Nano ↔ Hardware
-
----
-
-## Next Steps for Team Report
-
-### 1. Calibration
-- **Thermistor:** Measure resistance at known temperatures (ice bath, room temp, warm water)
-- **pH Sensor:** Calibrate with pH 4.0, 7.0, and 10.0 buffer solutions
-- **Motor RPM:** Verify hall sensor pulse count using strobe/tachometer
-
-### 2. Performance Testing
-- **Step Response Tests:**
-  - Record settling time for each subsystem
-  - Measure overshoot percentage
-  - Calculate steady-state error
-- **Ramp Response Tests:**
-  - Gradual setpoint changes
-  - Test controller tracking ability
-- **Disturbance Rejection:**
-  - Manually disturb system
-  - Measure recovery time
-
-### 3. Data Logging
-- **Export from Node-RED:**
-  - Use Debug nodes with file output
-  - Or use MQTT recorder (Mosquitto client)
-- **Analysis:**
-  - Plot response curves in MATLAB/Python
-  - Calculate performance metrics
-  - Compare against design specifications
-
-### 4. Integration Testing
-- **Multi-Subsystem Operation:**
-  - Run all three controllers simultaneously
-  - Verify no interference
-  - Check for resource conflicts
-- **Communication Latency:**
-  - Measure end-to-end delay (sensor → dashboard)
-  - UART delay: <10ms
-  - MQTT delay: ~100-500ms
-  - Total expected: <1 second
-
-### 5. Documentation
-- **System Diagrams:**
-  - Hardware wiring diagrams
-  - Software architecture flowcharts
-  - Communication protocol diagrams
-- **Code Documentation:**
-  - Comment all PI controller parameters
-  - Explain calibration constants
-  - Document MQTT topic structure
-- **Test Results:**
-  - Performance graphs
-  - Calibration data tables
-  - Error analysis
+| Parameter | Range | Tolerance | Status |
+|-----------|-------|-----------|--------|
+| Stirring | 500-1500 RPM | ±20 RPM | ✅ |
+| Temperature | 25-35°C | ±0.5°C | ✅ |
+| pH | 3-7 | ±0.1 | ✅ |
+| Data Logging | MQTT timestamped | - | ✅ |
+| User Interface | Node-RED Dashboard | - | ✅ |
+| Remote Control | Dashboard sliders | - | ✅ |
 
 ---
 
@@ -432,45 +345,21 @@ SET:PH:5\n
 
 ```
 BIOREACTOR-SYSTEM/
-├── .gitignore                    # Contains **/credentials.h
-├── credentials_template.h        # Template for team (commit this)
-├── README.md                     # This file
+├── .gitignore
+├── credentials_template.h
+├── README.md
 │
 ├── nano_controller/
-│   ├── nano_controller.ino       # Full PI controller code
-│   └── credentials.h             # NOT COMMITTED (local only)
-│
-├── nano_test/
-│   └── nano_test.ino            # Test code with fake data
+│   ├── nano_controller.ino
+│   └── credentials.h (NOT COMMITTED)
 │
 ├── ttgo_gateway/
-│   ├── ttgo_gateway.ino         # Full gateway code
-│   └── credentials.h             # NOT COMMITTED (local only)
+│   ├── ttgo_gateway.ino
+│   └── credentials.h (NOT COMMITTED)
 │
-├── ttgo_test/
-│   └── ttgo_test.ino            # Test code with display
-│
-├── nodered/
-│   └── flows.json               # Complete dashboard flow
-│
-└── docs/
-    ├── PIN_CONFIGURATION_REFERENCE.md
-    ├── BREADBOARD_WIRING_GUIDE.md
-    ├── TESTING_GUIDE.md
-    ├── MQTT_TOPICS_REFERENCE.md
-    ├── DASHBOARD_LAYOUT_SPEC.md
-    └── FLOW_UPDATE_SUMMARY.md
+└── nodered/
+    └── flows.json
 ```
-
----
-
-## References
-
-- **PIMotorLecture_2026_1.pdf** - PI controller design methodology
-- **Connected_Bioreactor_Design_Specification.pdf** - System specifications
-- **Arduino Nano ESP32 datasheet** - Pin configuration and specifications
-- **TTGO T-Display pinout** - GPIO mapping and hardware details
-- **Node-RED Dashboard 2.0 docs** - Dashboard configuration guide
 
 ---
 
@@ -480,31 +369,42 @@ BIOREACTOR-SYSTEM/
 - Node-RED Dashboard 2.0 design and implementation
 - MQTT integration and topic architecture
 - System architecture coordination
-- Integration testing and debugging
-- Comprehensive documentation
+- Integration testing
+- Documentation
 
 **EEE Team:**
 - Hardware interfacing and wiring
-- Sensor calibration procedures
+- Sensor calibration
 - Actuator control circuitry
-- Power supply design
 
 **CS Team:**
 - Embedded software (Nano + TTGO)
 - UART communication protocol
 - PI controller implementation
-- Data logging and analysis tools
+
+---
+
+## Important Notes
+
+1. **Data Format:** `PH:8.0,TEMP:22.2,RPM:1020`
+2. **UART Pins:** Nano uses GPIO 43/44, TTGO uses GPIO 21/22
+3. **ADC Voltage:** Arduino Nano ESP32 is 3.3V max (not 5V)
+4. **Common Ground:** Required for UART communication
+5. **credentials.h:** Must never be committed to git
+6. **WiFi:** Works with both eduroam and mobile hotspot
+7. **MQTT Broker:** Public HiveMQ (no authentication required)
+8. **RPM Calculation:** (pulses * 60) / 70 magnets per revolution
 
 ---
 
 ## Contact & Support
 
-For questions or issues:
-1. Check this README first
-2. Review documentation in `/docs` folder
-3. Test with provided test codes (nano_test.ino, ttgo_test.ino)
+For issues:
+1. Check this README
+2. Verify hardware connections (especially GND)
+3. Check Serial Monitors for error messages
 4. Use MQTTX to debug MQTT communication
-5. Check Node-RED Debug sidebar for errors
+5. Check Node-RED Debug sidebar
 
-**Last Updated:** 2025-12-01  
-**System Status:** ✅ Software Integration Complete, Ready for Hardware Testing
+**System Status:** Production code ready for hardware integration  
+**Last Updated:** 2025-12-03

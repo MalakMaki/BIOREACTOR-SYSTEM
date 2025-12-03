@@ -1,5 +1,5 @@
 # Arduino credentials
-# **/credentials.h
+**/credentials.h
 
 # Arduino build files
 **/.build/
