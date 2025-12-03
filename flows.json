@@ -1,5 +1,83 @@
 [
     {
+        "id": "73d0499ee83cee74",
+        "type": "tab",
+        "label": "Bioreactor System",
+        "disabled": false
+    },
+    {
+        "id": "60f4c021ba650472",
+        "type": "mqtt in",
+        "z": "73d0499ee83cee74",
+        "name": "RPM Sensor",
+        "topic": "bioreactor/sensor/rpm",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt_broker_config",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 130,
+        "y": 80,
+        "wires": [
+            [
+                "8f3b524cd4d0f4d6",
+                "c2904a1d7e7e0375",
+                "e041bf345178b00a"
+            ]
+        ]
+    },
+    {
+        "id": "8f3b524cd4d0f4d6",
+        "type": "ui-gauge",
+        "z": "73d0499ee83cee74",
+        "name": "RPM Gauge",
+        "group": "group_stirrer",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": "4",
+        "height": "4",
+        "gtype": "gauge",
+        "title": "Current RPM",
+        "alwaysShowTitle": false,
+        "units": "RPM",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#00b500",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "500",
+                "color": "#e6e600",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "1000",
+                "color": "#ca3838",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": 1500,
+        "sizeThickness": "",
+        "sizeGap": "",
+        "sizeKeyThickness": "",
+        "className": "",
+        "x": 330,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "c2904a1d7e7e0375",
         "type": "ui-chart",
         "z": "73d0499ee83cee74",
@@ -60,6 +138,768 @@
         ]
     },
     {
+        "id": "bff3b28b66de037f",
+        "type": "mqtt in",
+        "z": "73d0499ee83cee74",
+        "name": "Temperature Sensor",
+        "topic": "bioreactor/sensor/temperature",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt_broker_config",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 110,
+        "y": 280,
+        "wires": [
+            [
+                "75eb565f52346808",
+                "b80696cde47a06f1",
+                "b612263177b1afdd"
+            ]
+        ]
+    },
+    {
+        "id": "75eb565f52346808",
+        "type": "ui-gauge",
+        "z": "73d0499ee83cee74",
+        "name": "Temperature Gauge",
+        "group": "group_temperature",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": "4",
+        "height": "4",
+        "gtype": "gauge",
+        "title": "Current Temperature",
+        "alwaysShowTitle": false,
+        "units": "°C",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "20",
+                "color": "#00b500",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "25",
+                "color": "#e6e600",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "35",
+                "color": "#ca3838",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 20,
+        "max": 40,
+        "sizeThickness": "",
+        "sizeGap": "",
+        "sizeKeyThickness": "",
+        "className": "",
+        "x": 350,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b80696cde47a06f1",
+        "type": "ui-chart",
+        "z": "73d0499ee83cee74",
+        "group": "group_temperature",
+        "name": "Temperature Chart",
+        "label": "Temperature Trend",
+        "order": 2,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "Time",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "°C",
+        "yAxisProperty": "",
+        "yAxisPropertyType": "property",
+        "ymin": "20",
+        "ymax": "40",
+        "bins": "",
+        "stackSeries": false,
+        "pointRadius": "",
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#1f77b4",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": "4",
+        "height": "4",
+        "className": "",
+        "interpolation": "linear",
+        "x": 350,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a8f22b5fe5b2df22",
+        "type": "mqtt in",
+        "z": "73d0499ee83cee74",
+        "name": "pH Sensor",
+        "topic": "bioreactor/sensor/ph",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt_broker_config",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 130,
+        "y": 480,
+        "wires": [
+            [
+                "4d2e4fcb0d21c8f7",
+                "72e2b5a9c5b9fc95",
+                "731b9377cae9ec23"
+            ]
+        ]
+    },
+    {
+        "id": "4d2e4fcb0d21c8f7",
+        "type": "ui-gauge",
+        "z": "73d0499ee83cee74",
+        "name": "pH Gauge",
+        "group": "group_ph",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": "4",
+        "height": "4",
+        "gtype": "gauge",
+        "title": "Current pH",
+        "alwaysShowTitle": false,
+        "units": "pH",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "3",
+                "color": "#ca3838",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "4",
+                "color": "#e6e600",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "5",
+                "color": "#00b500",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "6",
+                "color": "#e6e600",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "6.5",
+                "color": "#ca3838",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 3,
+        "max": 7,
+        "sizeThickness": "",
+        "sizeGap": "",
+        "sizeKeyThickness": "",
+        "className": "",
+        "x": 330,
+        "y": 480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "72e2b5a9c5b9fc95",
+        "type": "ui-chart",
+        "z": "73d0499ee83cee74",
+        "group": "group_ph",
+        "name": "pH Chart",
+        "label": "pH Trend",
+        "order": 2,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "Time",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "pH",
+        "yAxisProperty": "",
+        "yAxisPropertyType": "property",
+        "ymin": "3",
+        "ymax": "7",
+        "bins": "",
+        "stackSeries": false,
+        "pointRadius": "",
+        "showLegend": false,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#1f77b4"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": "4",
+        "height": "4",
+        "className": "",
+        "interpolation": "linear",
+        "x": 330,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fcb76ab137a854a9",
+        "type": "ui-slider",
+        "z": "73d0499ee83cee74",
+        "group": "group_controls",
+        "name": "Temp Setpoint Slider",
+        "label": "Temp setpoint",
+        "order": 1,
+        "width": "4",
+        "height": "1",
+        "passthru": true,
+        "topic": "",
+        "topicType": "str",
+        "showTicks": "false",
+        "min": 25,
+        "max": 35,
+        "step": 0.5,
+        "className": "",
+        "showTextField": true,
+        "x": 140,
+        "y": 700,
+        "wires": [
+            [
+                "3c72d67f829ab341",
+                "75cfc515e22efbaa"
+            ]
+        ]
+    },
+    {
+        "id": "3c72d67f829ab341",
+        "type": "mqtt out",
+        "z": "73d0499ee83cee74",
+        "name": "Publish Temp Setpoint",
+        "topic": "bioreactor/setpoint/temperature",
+        "qos": "0",
+        "retain": "false",
+        "broker": "mqtt_broker_config",
+        "x": 380,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "9cf953b923bbbbc8",
+        "type": "ui-slider",
+        "z": "73d0499ee83cee74",
+        "group": "group_controls",
+        "name": "Speed Setpoint Slider",
+        "label": "Speed setpoint",
+        "order": 2,
+        "width": "4",
+        "height": "1",
+        "passthru": true,
+        "topic": "",
+        "topicType": "str",
+        "showTicks": "false",
+        "min": 500,
+        "max": 1500,
+        "step": 50,
+        "className": "",
+        "showTextField": true,
+        "x": 140,
+        "y": 740,
+        "wires": [
+            [
+                "a5682478ad30a38d",
+                "0714f4b65da01d31"
+            ]
+        ]
+    },
+    {
+        "id": "a5682478ad30a38d",
+        "type": "mqtt out",
+        "z": "73d0499ee83cee74",
+        "name": "Publish RPM Setpoint",
+        "topic": "bioreactor/setpoint/rpm",
+        "qos": "0",
+        "retain": "false",
+        "broker": "mqtt_broker_config",
+        "x": 380,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "5be6d252fe3a8419",
+        "type": "ui-slider",
+        "z": "73d0499ee83cee74",
+        "group": "group_controls",
+        "name": "pH Setpoint Slider",
+        "label": "pH setpoint",
+        "order": 3,
+        "width": "4",
+        "height": "1",
+        "passthru": true,
+        "topic": "",
+        "topicType": "str",
+        "showTicks": "false",
+        "min": 3,
+        "max": 7,
+        "step": 0.1,
+        "className": "",
+        "showTextField": true,
+        "x": 130,
+        "y": 780,
+        "wires": [
+            [
+                "df99df4a37f54374",
+                "2249fc5c015c5e05"
+            ]
+        ]
+    },
+    {
+        "id": "df99df4a37f54374",
+        "type": "mqtt out",
+        "z": "73d0499ee83cee74",
+        "name": "Publish pH Setpoint",
+        "topic": "bioreactor/setpoint/ph",
+        "qos": "0",
+        "retain": "false",
+        "broker": "mqtt_broker_config",
+        "x": 360,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "submit_button",
+        "type": "ui-button",
+        "z": "73d0499ee83cee74",
+        "group": "group_controls",
+        "name": "Submit Button",
+        "label": "submit",
+        "order": 4,
+        "width": "2",
+        "height": "1",
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "submit",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "enableClick": true,
+        "x": 130,
+        "y": 820,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "clear_button",
+        "type": "ui-button",
+        "z": "73d0499ee83cee74",
+        "group": "group_controls",
+        "name": "Clear Button",
+        "label": "clear",
+        "order": 5,
+        "width": "2",
+        "height": "1",
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "clear",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 130,
+        "y": 860,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "state_temp_in",
+        "type": "mqtt in",
+        "z": "73d0499ee83cee74",
+        "name": "Temp Setpoint State",
+        "topic": "bioreactor/setpoint/temperature",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt_broker_config",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 550,
+        "y": 700,
+        "wires": [
+            [
+                "state_temp_text"
+            ]
+        ]
+    },
+    {
+        "id": "state_temp_text",
+        "type": "ui-text",
+        "z": "73d0499ee83cee74",
+        "group": "group_esp32",
+        "order": 1,
+        "width": "4",
+        "height": "1",
+        "name": "Temp Setpoint Display",
+        "label": "Temp setpoint",
+        "layout": "row-spread",
+        "style": true,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 780,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "state_speed_in",
+        "type": "mqtt in",
+        "z": "73d0499ee83cee74",
+        "name": "Speed Setpoint State",
+        "topic": "bioreactor/setpoint/rpm",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt_broker_config",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 550,
+        "y": 740,
+        "wires": [
+            [
+                "state_speed_text"
+            ]
+        ]
+    },
+    {
+        "id": "state_speed_text",
+        "type": "ui-text",
+        "z": "73d0499ee83cee74",
+        "group": "group_esp32",
+        "order": 2,
+        "width": "4",
+        "height": "1",
+        "name": "Speed Setpoint Display",
+        "label": "Speed setpoint",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 780,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "state_ph_in",
+        "type": "mqtt in",
+        "z": "73d0499ee83cee74",
+        "name": "pH Setpoint State",
+        "topic": "bioreactor/setpoint/ph",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt_broker_config",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 550,
+        "y": 780,
+        "wires": [
+            [
+                "state_ph_text"
+            ]
+        ]
+    },
+    {
+        "id": "state_ph_text",
+        "type": "ui-text",
+        "z": "73d0499ee83cee74",
+        "group": "group_esp32",
+        "order": 3,
+        "width": "4",
+        "height": "1",
+        "name": "pH Setpoint Display",
+        "label": "pH setpoint",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 780,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "state_sequence_inject",
+        "type": "inject",
+        "z": "73d0499ee83cee74",
+        "name": "Sequence Counter",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 550,
+        "y": 820,
+        "wires": [
+            [
+                "state_sequence_function"
+            ]
+        ]
+    },
+    {
+        "id": "state_sequence_function",
+        "type": "function",
+        "z": "73d0499ee83cee74",
+        "name": "Increment Counter",
+        "func": "// Initialize counter in context\nlet count = context.get('counter') || 100;\ncount++;\ncontext.set('counter', count);\nmsg.payload = count;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 820,
+        "wires": [
+            [
+                "state_sequence_text"
+            ]
+        ]
+    },
+    {
+        "id": "state_sequence_text",
+        "type": "ui-text",
+        "z": "73d0499ee83cee74",
+        "group": "group_esp32",
+        "order": 4,
+        "width": "4",
+        "height": "1",
+        "name": "Sequence Number Display",
+        "label": "Sequence number",
+        "layout": "row-spread",
+        "style": false,
+        "font": "",
+        "fontSize": "",
+        "color": "#000000",
+        "wrapText": false,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "x": 960,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "e041bf345178b00a",
+        "type": "debug",
+        "z": "73d0499ee83cee74",
+        "name": "Debug RPM In",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "0714f4b65da01d31",
+        "type": "debug",
+        "z": "73d0499ee83cee74",
+        "name": "Debug RPM Out",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "b612263177b1afdd",
+        "type": "debug",
+        "z": "73d0499ee83cee74",
+        "name": "Debug Temp In",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "75cfc515e22efbaa",
+        "type": "debug",
+        "z": "73d0499ee83cee74",
+        "name": "Debug Temp Out",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "731b9377cae9ec23",
+        "type": "debug",
+        "z": "73d0499ee83cee74",
+        "name": "Debug pH In",
+        "active": true,
+        "console": false,
+        "complete": "payload",
+        "x": 330,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "2249fc5c015c5e05",
+        "type": "debug",
+        "z": "73d0499ee83cee74",
+        "name": "Debug pH Out",
+        "active": false,
+        "console": false,
+        "complete": "payload",
+        "x": 580,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "mqtt_broker_config",
+        "type": "mqtt-broker",
+        "name": "HiveMQ Public Broker",
+        "broker": "broker.hivemq.com",
+        "port": "1883",
+        "clientid": "nodered_bioreactor_client",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "5",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
         "id": "group_stirrer",
         "type": "ui-group",
         "name": "Stirrer Control",
@@ -67,6 +907,62 @@
         "width": "4",
         "height": "1",
         "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "group_temperature",
+        "type": "ui-group",
+        "name": "Temperature Control",
+        "page": "ui_page",
+        "width": "4",
+        "height": "1",
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "group_ph",
+        "type": "ui-group",
+        "name": "pH Control",
+        "page": "ui_page",
+        "width": "4",
+        "height": "1",
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "group_controls",
+        "type": "ui-group",
+        "name": "Controls",
+        "page": "ui_page",
+        "width": "4",
+        "height": "1",
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "group_esp32",
+        "type": "ui-group",
+        "name": "ESP32 state",
+        "page": "ui_page",
+        "width": "2",
+        "height": "1",
+        "order": 5,
         "showTitle": true,
         "className": "",
         "visible": "true",
@@ -149,7 +1045,7 @@
         }
     },
     {
-        "id": "2c44f6a5ea479cb3",
+        "id": "9a3734c5c54cba5c",
         "type": "global-config",
         "env": [],
         "modules": {
