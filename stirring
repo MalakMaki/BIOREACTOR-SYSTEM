@@ -1,1 +1,113 @@
+/ --- PIN DEFINITIONS ---
+const int motorPin = 2;   // Digital Pin D2 connected to the MOSFET Gate (PWM capable)
+const int hallSensorPin = 3; // Digital Pin D3 connected to the Hall Effect Sensor OUT pin
+                             // D3 is ideal for external interrupts.
 
+// --- RPM MEASUREMENT VARIABLES ---
+volatile unsigned long pulseCount = 0; // Counts the magnetic pulses. 'volatile' is crucial for variables modified in an ISR.
+unsigned long lastRpmTime = 0;         // Stores the time of the last RPM calculation (using millis())
+const long rpmCalculationInterval = 1000; // Calculate RPM every 1000 milliseconds (1 second)
+float currentRPM = 0.0;                // Stores the calculated Rotations Per Minute
+
+// --- MOTOR CONTROL VARIABLES ---
+int targetSpeedPWM = 100; // The desired PWM speed when the motor is ON (0 - 255). 
+bool motorIsOn = true;    // Initial state: ON
+
+// --- MOTOR TOGGLE VARIABLES (New) ---
+const long motorToggleInterval = 10000; // 10 seconds in milliseconds
+unsigned long lastMotorToggleTime = 0;   // Stores the time of the last motor state change
+
+// --- INTERRUPT SERVICE ROUTINE (ISR) ---
+// This function is called every time the magnet passes the Hall sensor
+void pulseCounter() {
+  pulseCount++;
+}
+
+void setup() {
+  // Initialize Serial communication for debugging and output
+  Serial.begin(115360); // Use 115200 for standard baud rate
+  Serial.println("--- Stirrer Motor Control System Initialized ---");
+  Serial.println("Motor on D2, Hall Sensor on D3. (70 Pulses Per Revolution)");
+  Serial.println("Motor will toggle ON/OFF every 10 seconds.");
+
+  // !!! IMPORTANT HARDWARE SAFETY NOTE !!!
+  // 1. GATE RESISTOR: Ensure a 100-220 Ohm resistor is between D2 and MOSFET Gate.
+  // 2. LOGIC-LEVEL: Ensure you use a Logic-Level MOSFET (Vgs(th) < 2V).
+  // 3. SEPARATE POWER: Dedicated 5V/1A PSU for the motor is now correctly implemented. Ensure all Grounds are connected.
+
+  // Set the motor control pin as an output
+  pinMode(motorPin, OUTPUT);
+  
+  // Set the Hall sensor pin as an input with an internal pull-up resistor
+  pinMode(hallSensorPin, INPUT_PULLUP);
+
+  // Attach the interrupt to the Hall sensor pin
+  // * CHANGED: Trying RISING edge interrupt instead of FALLING *
+  attachInterrupt(digitalPinToInterrupt(hallSensorPin), pulseCounter, RISING); 
+  
+  // Start the motor at the initial state (ON) instantaneously.
+  analogWrite(motorPin, targetSpeedPWM);
+
+  Serial.print("Motor Started Instantly. Final PWM: ");
+  Serial.println(targetSpeedPWM);
+  
+  // Initialize the timing variables
+  lastRpmTime = millis();
+  lastMotorToggleTime = millis(); // Initialize the toggle timer
+}
+
+void loop() {
+  unsigned long currentTime = millis();
+
+  // --- MOTOR ON/OFF TOGGLE (Non-Blocking, 10-Second Interval) ---
+  if (currentTime - lastMotorToggleTime >= motorToggleInterval) {
+    // Reset the toggle timer
+    lastMotorToggleTime = currentTime;
+
+    // Toggle the motor state
+    motorIsOn = !motorIsOn; 
+
+    if (motorIsOn) {
+      // Turn motor ON instantly
+      analogWrite(motorPin, targetSpeedPWM);
+      Serial.println("\n--- MOTOR STATE: ON ---");
+      Serial.print("Sending PWM value: ");
+      Serial.println(targetSpeedPWM);
+    } else {
+      // Turn motor OFF
+      analogWrite(motorPin, 0);
+      Serial.println("\n--- MOTOR STATE: OFF ---");
+      Serial.println("Sending PWM value: 0");
+    }
+  }
+
+  // --- RPM CALCULATION (Non-Blocking, 1-Second Interval) ---
+  if (currentTime - lastRpmTime >= rpmCalculationInterval) {
+    // 1. Reset the timer for the next interval
+    lastRpmTime = currentTime;
+
+    // 2. Safely grab the pulse count and reset for the next interval
+    noInterrupts();
+    unsigned long currentPulses = pulseCount;
+    pulseCount = 0; 
+    interrupts();
+
+    // 3. Calculate RPM based on 70 Pulses Per Revolution (PPR)
+    const float magnetsPerRevolution = 70.0; 
+    currentRPM = (currentPulses) / magnetsPerRevolution;
+
+    // 4. Output the result
+    if (motorIsOn) {
+        Serial.print("Calculated RPS: ");
+        Serial.println(currentRPM);
+        if (currentPulses == 0) {
+            Serial.println("WARNING: Motor is ON but no pulses detected (RPM=0). Check Hall Sensor trigger or wiring.");
+        }
+    } else {
+        // Output zero or skip logging when the motor is off
+        Serial.println("Motor OFF. RPM reading stopped.");
+    }
+  }
+
+  // Any other non-blocking code goes here...
+}
