@@ -8,9 +8,9 @@
 // ========== PIN CONFIGURATION ==========
 const int MOTOR_PIN = 3;            // D3 - Stirring Motor MOSFET Gate (PWM)
 const int HALL_SENSOR_PIN = 2;      // D2 - Hall Effect Sensor
-const int THERMISTOR_PIN = A0;      // A0 - Thermistor for temperature
-const int HEATER_PIN = 10;          // D10 - Heater MOSFET Gate (PWM)
-const int PH_PIN = A1;              // A1 - pH Sensor
+const int THERMISTOR_PIN = A1;      // A1 - Thermistor for temperature
+const int HEATER_PIN = 6;           // D6 - Heater MOSFET Gate (PWM)
+const int PH_PIN = A0;              // A0 - pH Sensor
 const int MOTOR_A_PIN = 5;          // D5 - pH Motor A (acid pump) - PWM
 const int MOTOR_B_PIN = 4;          // D4 - pH Motor B (base pump) - PWM
 
@@ -20,7 +20,7 @@ const long sendInterval = 2000;     // Send data every 2 seconds
 
 // ========== SENSOR DATA ==========
 float pH_value = 0.0;               // REAL - measured from pH sensor
-float temperature = 0.0;           // REAL - measured from thermistor
+float temperature = 0.0;            // REAL - measured from thermistor
 int stirring_rpm = 0;               // REAL - measured from Hall sensor
 
 // ========== SETPOINTS (Dashboard Controllable) ==========
@@ -182,17 +182,42 @@ void controlpHMotorsPI(float currentpH) {
   }
 }
 
+// ========== PRINT CURRENT SETPOINTS ==========
+void printSetpoints() {
+  Serial.println("\n╔════════════════════════════════════════╗");
+  Serial.println("║      CURRENT SETPOINTS & STATUS        ║");
+  Serial.println("╠════════════════════════════════════════╣");
+  Serial.print("║  Temperature Target: ");
+  Serial.print(Tset, 1);
+  Serial.print("°C");
+  Serial.print(heaterOn ? " [HEATER ON]" : " [HEATER OFF]");
+  Serial.println();
+  Serial.print("║  pH Target:          ");
+  Serial.print(pHset, 1);
+  Serial.print(pHpumpOn ? " [PUMPS ON]" : " [PUMPS OFF]");
+  Serial.println();
+  Serial.print("║  RPM Target:         ");
+  Serial.print(RPMset);
+  Serial.print(" RPM");
+  Serial.print(motorOn ? " [MOTOR ON]" : " [MOTOR OFF]");
+  Serial.println();
+  Serial.println("╚════════════════════════════════════════╝\n");
+}
+
 // ========== SETUP ==========
 void setup() {
   // USB Serial for debugging
   Serial.begin(115200);
   while (!Serial) { ; }
-  Serial.println("=== Arduino Nano ESP32 - FULL REAL SYSTEM ===");
-  Serial.println("=== Real Temperature + Real pH + Real Stirring ===\n");
+  Serial.println("\n\n");
+  Serial.println("╔═══════════════════════════════════════════════════════╗");
+  Serial.println("║   Arduino Nano ESP32 - FULL REAL SYSTEM              ║");
+  Serial.println("║   Real Temperature + Real pH + Real Stirring         ║");
+  Serial.println("╚═══════════════════════════════════════════════════════╝");
 
   // Serial1 for TTGO/Node-RED communication
   Serial1.begin(115200, SERIAL_8N1, D0, D1);
-  Serial.println("Serial1 started on D0(RX), D1(TX) for dashboard communication.");
+  Serial.println("\n✓ Serial1 started on D0(RX), D1(TX) @ 115200 baud");
 
   // Configure pins
   pinMode(MOTOR_PIN, OUTPUT);
@@ -211,43 +236,23 @@ void setup() {
   analogWrite(MOTOR_A_PIN, 0);
   analogWrite(MOTOR_B_PIN, 0);
   
-  Serial.println("\n--- Subsystems Status ---");
-  Serial.println("  Temperature: REAL (Thermistor + PI Control)");
-  Serial.println("    - Thermistor on A0");
-  Serial.println("    - Heater on D10");
-  Serial.println("    - Target: " + String(Tset, 1) + "°C");
-  
-  Serial.println("  pH: REAL (pH Sensor + PI Control)");
-  Serial.println("    - pH Sensor on A1");
-  Serial.println("    - Acid Pump (Motor A) on D5");
-  Serial.println("    - Base Pump (Motor B) on D4");
-  Serial.println("    - Target: " + String(pHset, 1));
-  Serial.println("    - Calibration:");
-  Serial.println("      pH 4:  " + String(voltage_pH4, 3) + " V");
-  Serial.println("      pH 7:  " + String(voltage_pH7, 3) + " V");
-  Serial.println("      pH 10: " + String(voltage_pH10, 3) + " V");
-  
-  Serial.println("  Stirring: REAL with Calibrated PWM Mapping");
-  Serial.println("    - Hall sensor on D2");
-  Serial.println("    - Motor on D3");
+  Serial.println("\n--- Hardware Configuration ---");
+  Serial.println("  Temperature: Thermistor (A1) + Heater (D6)");
+  Serial.println("  pH: pH Sensor (A0) + Acid Pump (D5) + Base Pump (D4)");
+  Serial.println("  Stirring: Hall Sensor (D2) + Motor (D3)");
 
-  Serial.println("\n--- PWM Calibration Table (Stirring) ---");
-  for (int i = 0; i < calibrationPoints; i++) {
-    Serial.print("  ");
-    Serial.print(calibrationRPM[i]);
-    Serial.print(" RPM → PWM ");
-    Serial.println(calibrationPWM[i]);
-  }
-
-  Serial.println("\n--- Dashboard Commands Available ---");
-  Serial.println("  SET:TEMP:XX (20-45°C) - Sets temperature SETPOINT");
-  Serial.println("  SET:PH:X.X (4.0-10.0) - Sets pH SETPOINT");
-  Serial.println("  SET:RPM:XXXX (0-1500) - Sets target RPM");
-  Serial.println("  HEATER:ON / HEATER:OFF - Enable/disable heater");
-  Serial.println("  MOTOR:ON / MOTOR:OFF - Enable/disable stirring motor");
-  Serial.println("  PHPUMP:ON / PHPUMP:OFF - Enable/disable pH pumps");
+  Serial.println("\n--- Dashboard Commands ---");
+  Serial.println("  SET:TEMP:XX    - Set temperature target");
+  Serial.println("  SET:PH:X.X     - Set pH target");
+  Serial.println("  SET:RPM:XXXX   - Set RPM target");
+  Serial.println("  HEATER:ON/OFF  - Control heater");
+  Serial.println("  MOTOR:ON/OFF   - Control stirring motor");
+  Serial.println("  PHPUMP:ON/OFF  - Control pH pumps");
   
-  Serial.println("\n--- System Ready ---\n");
+  printSetpoints();
+  
+  Serial.println("🟢 SYSTEM READY - Waiting for dashboard commands...\n");
+  Serial.println("═══════════════════════════════════════════════════════\n");
   
   lastRpmTime = millis();
   lastTempUpdate = micros();
@@ -271,7 +276,7 @@ void loop() {
     
     // Calculate temperature
     Rth = R * Vadc / (Vcc - Vadc);
-    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 24.46;
+    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 + 25.54;;
     temperature = T;
     
     // PI Controller
@@ -333,46 +338,60 @@ void loop() {
     currentRPM = revolutionsPerSecond * 60.0;
     stirring_rpm = (int)currentRPM;
 
-    Serial.println("\n--- System Status ---");
-    Serial.print("  Temperature: ");
-    Serial.print(temperature, 1);
-    Serial.print("°C (Target: ");
-    Serial.print(Tset, 1);
-    Serial.print("°C) | Error: ");
-    Serial.print(Te, 1);
-    Serial.print("°C | Heater PWM: ");
-    Serial.print(HeaterPower);
-    Serial.print(" | Heater: ");
-    Serial.println(heaterOn ? "ON" : "OFF");
+    Serial.println("┌─────────────────────────────────────────────────────┐");
+    Serial.println("│              SYSTEM STATUS REPORT                   │");
+    Serial.println("├─────────────────────────────────────────────────────┤");
     
-    Serial.print("  pH: ");
+    // Temperature
+    Serial.print("│ TEMP: ");
+    Serial.print(temperature, 1);
+    Serial.print("°C → Target: ");
+    Serial.print(Tset, 1);
+    Serial.print("°C | Error: ");
+    Serial.print(Te, 1);
+    Serial.println("°C");
+    Serial.print("│       Heater PWM: ");
+    Serial.print(HeaterPower);
+    Serial.print(" | Status: ");
+    Serial.println(heaterOn ? "ON ✓" : "OFF ✗");
+    
+    Serial.println("├─────────────────────────────────────────────────────┤");
+    
+    // pH
+    Serial.print("│ pH:   ");
     Serial.print(pH_value, 2);
-    Serial.print(" (Target: ");
+    Serial.print(" → Target: ");
     Serial.print(pHset, 1);
-    Serial.print(") | Error: ");
-    Serial.print(pH_value - pHset, 3);
-    Serial.print(" | Integral: ");
-    Serial.print(pH_integral, 2);
-    Serial.print(" | Acid PWM: ");
+    Serial.print(" | Error: ");
+    Serial.println(pH_value - pHset, 3);
+    Serial.print("│       Acid PWM: ");
     Serial.print(motorA_pwm);
     Serial.print(" | Base PWM: ");
     Serial.print(motorB_pwm);
     Serial.print(" | Pumps: ");
-    Serial.println(pHpumpOn ? "ON" : "OFF");
+    Serial.println(pHpumpOn ? "ON ✓" : "OFF ✗");
     
-    Serial.print("  Stirring RPM: ");
+    Serial.println("├─────────────────────────────────────────────────────┤");
+    
+    // Stirring
+    Serial.print("│ RPM:  ");
     Serial.print(stirring_rpm);
-    Serial.print(" (Target: ");
+    Serial.print(" → Target: ");
     Serial.print(RPMset);
-    Serial.print(") | PWM: ");
+    Serial.print(" | Error: ");
+    Serial.println(RPMset - stirring_rpm);
+    Serial.print("│       Motor PWM: ");
     Serial.print(targetSpeedPWM);
-    Serial.print(" | Motor: ");
-    Serial.println(motorOn ? "ON" : "OFF");
+    Serial.print(" | Pulses: ");
+    Serial.print(currentPulses);
+    Serial.print(" | Status: ");
+    Serial.println(motorOn ? "ON ✓" : "OFF ✗");
     
     if (motorOn && RPMset > 0 && currentPulses == 0) {
-      Serial.println("  ⚠ WARNING: Motor ON but no pulses detected!");
+      Serial.println("│ ⚠ WARNING: Motor ON but no pulses detected!        │");
     }
-    Serial.println("---");
+    
+    Serial.println("└─────────────────────────────────────────────────────┘\n");
   }
 
   // ===== SEND DATA TO DASHBOARD (every 2 seconds) =====
@@ -383,9 +402,7 @@ void loop() {
 
     Serial1.println(message);
 
-    Serial.println("\n=== Data Sent to Dashboard ===");
-    Serial.println(message);
-    Serial.println("---");
+    Serial.println("📤 Data sent to dashboard: " + message + "\n");
 
     lastSendTime = currentTime;
   }
@@ -395,99 +412,150 @@ void loop() {
     String incomingData = Serial1.readStringUntil('\n');
     incomingData.trim();
     
-    Serial.println("\n========================================");
-    Serial.print("🔵 Received: ");
+    Serial.println("\n\n");
+    Serial.println("╔═══════════════════════════════════════════════════════╗");
+    Serial.println("║     📡 DASHBOARD COMMAND RECEIVED FROM NODE-RED 📡   ║");
+    Serial.println("╠═══════════════════════════════════════════════════════╣");
+    Serial.print("║  Raw Command: ");
     Serial.println(incomingData);
-    Serial.println("========================================");
+    Serial.println("╠═══════════════════════════════════════════════════════╣");
 
     // ===== TEMPERATURE SETPOINT (REAL) =====
     if (incomingData.startsWith("SET:TEMP:")) {
+      float oldTemp = Tset;
       float newTemp = incomingData.substring(9).toFloat();
-      if (newTemp >= 20 && newTemp <= 45) {
-        Tset = newTemp;
-        KIIntTe = 0;
-        
-        Serial.println("\n--- TEMPERATURE SETPOINT CHANGED (REAL) ---");
-        Serial.print("New Target: ");
-        Serial.print(Tset, 1);
-        Serial.println("°C");
-        
-        Serial1.print("ACK:TEMP:");
-        Serial1.println(Tset, 1);
-        Serial.println("✓ ACK sent to TTGO");
-      } else {
-        Serial.println("ERROR: Temperature out of range (20-45°C)");
-        Serial1.println("ERROR:TEMP:OUT_OF_RANGE");
-      }
+      
+      Tset = newTemp;
+      KIIntTe = 0;
+      
+      Serial.println("║                                                       ║");
+      Serial.println("║  🌡️  DASHBOARD ALTERED TEMPERATURE SETPOINT 🌡️      ║");
+      Serial.println("║                                                       ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.print("║  Previous Setpoint: ");
+      Serial.print(oldTemp, 1);
+      Serial.println("°C");
+      Serial.print("║  NEW Setpoint:      ");
+      Serial.print(Tset, 1);
+      Serial.println("°C ⭐");
+      Serial.println("║  ─────────────────────────────────────────────────── ║");
+      Serial.println("║  PI Controller Integral: RESET                        ║");
+      Serial.print("║  Current Temperature:    ");
+      Serial.print(temperature, 1);
+      Serial.println("°C");
+      Serial.print("║  New Error:              ");
+      Serial.print(Tset - temperature, 1);
+      Serial.println("°C");
+      Serial.println("║  Heater will now target new setpoint!                ║");
+      
+      Serial1.print("ACK:TEMP:");
+      Serial1.println(Tset, 1);
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
 
     // ===== pH SETPOINT (REAL) =====
     else if (incomingData.startsWith("SET:PH:")) {
+      float oldPH = pHset;
       float newPH = incomingData.substring(7).toFloat();
-      if (newPH >= 4.0 && newPH <= 10.0) {
-        pHset = newPH;
-        pH_integral = 0;  // Reset integral term
-        
-        Serial.println("\n--- pH SETPOINT CHANGED (REAL) ---");
-        Serial.print("New Target pH: ");
-        Serial.println(pHset, 1);
-        Serial.println("PI Controller integral term reset.");
-        
-        Serial1.print("ACK:PH:");
-        Serial1.println(pHset, 1);
-        Serial.println("✓ ACK sent to TTGO");
-      } else {
-        Serial.println("ERROR: pH out of range (4.0-10.0)");
-        Serial1.println("ERROR:PH:OUT_OF_RANGE");
-      }
+      
+      pHset = newPH;
+      pH_integral = 0;
+      
+      Serial.println("║                                                       ║");
+      Serial.println("║  🧪 DASHBOARD ALTERED pH SETPOINT 🧪                 ║");
+      Serial.println("║                                                       ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.print("║  Previous Setpoint: pH ");
+      Serial.println(oldPH, 1);
+      Serial.print("║  NEW Setpoint:      pH ");
+      Serial.print(pHset, 1);
+      Serial.println(" ⭐");
+      Serial.println("║  ─────────────────────────────────────────────────── ║");
+      Serial.println("║  PI Controller Integral: RESET                        ║");
+      Serial.print("║  Current pH:             ");
+      Serial.println(pH_value, 2);
+      Serial.print("║  New Error:              ");
+      Serial.println(pH_value - pHset, 2);
+      Serial.println("║  pH pumps will now target new setpoint!              ║");
+      
+      Serial1.print("ACK:PH:");
+      Serial1.println(pHset, 1);
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
 
     // ===== RPM SETPOINT (REAL) =====
     else if (incomingData.startsWith("SET:RPM:")) {
+      int oldRPM = RPMset;
       int requestedRPM = incomingData.substring(8).toInt();
       
-      if (requestedRPM >= 0 && requestedRPM <= 1500) {
-        RPMset = requestedRPM;
+      RPMset = requestedRPM;
+      
+      if (requestedRPM == 0) {
+        motorOn = false;
+        targetSpeedPWM = 0;
+        analogWrite(MOTOR_PIN, 0);
         
-        if (requestedRPM == 0) {
-          motorOn = false;
-          targetSpeedPWM = 0;
-          analogWrite(MOTOR_PIN, 0);
-          Serial.println("\n--- MOTOR STOPPED (RPM = 0) ---");
-        } else {
-          motorOn = true;
-          targetSpeedPWM = rpmToPWM(requestedRPM);
-          analogWrite(MOTOR_PIN, targetSpeedPWM);
-          
-          Serial.println("\n--- RPM TARGET CHANGED ---");
-          Serial.print("Target RPM: ");
-          Serial.println(RPMset);
-          Serial.print("PWM: ");
-          Serial.println(targetSpeedPWM);
-        }
-        
-        Serial1.print("ACK:RPM:");
-        Serial1.println(RPMset);
-        Serial.println("✓ ACK sent to TTGO");
+        Serial.println("║                                                       ║");
+        Serial.println("║  🛑 DASHBOARD SET RPM TO ZERO - MOTOR STOPPED 🛑     ║");
+        Serial.println("║                                                       ║");
+        Serial.println("╠═══════════════════════════════════════════════════════╣");
+        Serial.print("║  Previous Setpoint: ");
+        Serial.print(oldRPM);
+        Serial.println(" RPM");
+        Serial.println("║  NEW Setpoint:      0 RPM ⭐");
+        Serial.println("║  Motor PWM:         0");
+        Serial.println("║  Motor Status:      OFF ✗");
       } else {
-        Serial.println("ERROR: RPM out of range (0-1500)");
-        Serial1.println("ERROR:RPM:OUT_OF_RANGE");
+        motorOn = true;
+        targetSpeedPWM = rpmToPWM(requestedRPM);
+        analogWrite(MOTOR_PIN, targetSpeedPWM);
+        
+        Serial.println("║                                                       ║");
+        Serial.println("║  ⚙️  DASHBOARD ALTERED RPM SETPOINT ⚙️               ║");
+        Serial.println("║                                                       ║");
+        Serial.println("╠═══════════════════════════════════════════════════════╣");
+        Serial.print("║  Previous Setpoint: ");
+        Serial.print(oldRPM);
+        Serial.println(" RPM");
+        Serial.print("║  NEW Setpoint:      ");
+        Serial.print(RPMset);
+        Serial.println(" RPM ⭐");
+        Serial.println("║  ─────────────────────────────────────────────────── ║");
+        Serial.print("║  Calculated PWM:    ");
+        Serial.println(targetSpeedPWM);
+        Serial.println("║  Motor Status:      ON ✓");
+        Serial.print("║  Current RPM:       ");
+        Serial.println(stirring_rpm);
+        Serial.print("║  RPM Error:         ");
+        Serial.println(RPMset - stirring_rpm);
+        Serial.println("║  Motor will now target new setpoint!                 ║");
       }
+      
+      Serial1.print("ACK:RPM:");
+      Serial1.println(RPMset);
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
 
     // ===== HEATER CONTROL (REAL) =====
     else if (incomingData == "HEATER:ON") {
       heaterOn = true;
-      Serial.println("\n--- HEATER turned ON (REAL) ---");
+      Serial.println("║  🔥 DASHBOARD TURNED HEATER ON                       ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.println("║  Heater Status: ON ✓");
+      Serial.println("║  PI Controller: ACTIVE");
+      Serial.println("║  Target Temperature: " + String(Tset, 1) + "°C");
       Serial1.println("ACK:HEATER:ON");
-      Serial.println("✓ ACK sent to TTGO");
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
     else if (incomingData == "HEATER:OFF") {
       heaterOn = false;
       analogWrite(HEATER_PIN, 0);
-      Serial.println("\n--- HEATER turned OFF (REAL) ---");
+      Serial.println("║  ❄️  DASHBOARD TURNED HEATER OFF                     ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.println("║  Heater Status: OFF ✗");
+      Serial.println("║  Heater PWM: 0");
       Serial1.println("ACK:HEATER:OFF");
-      Serial.println("✓ ACK sent to TTGO");
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
 
     // ===== MOTOR CONTROL (REAL) =====
@@ -498,59 +566,70 @@ void loop() {
         targetSpeedPWM = rpmToPWM(RPMset);
         analogWrite(MOTOR_PIN, targetSpeedPWM);
         
-        Serial.println("\n--- MOTOR turned ON (REAL) ---");
-        Serial.print("Target RPM: ");
-        Serial.print(RPMset);
-        Serial.print(" | PWM: ");
-        Serial.println(targetSpeedPWM);
+        Serial.println("║  ⚙️  DASHBOARD TURNED STIRRING MOTOR ON              ║");
+        Serial.println("╠═══════════════════════════════════════════════════════╣");
+        Serial.println("║  Motor Status: ON ✓");
+        Serial.println("║  Target RPM: " + String(RPMset));
+        Serial.println("║  Motor PWM: " + String(targetSpeedPWM));
       } else {
-        Serial.println("\n--- MOTOR ON (but RPM=0) ---");
+        Serial.println("║  ⚙️  DASHBOARD ENABLED MOTOR (but RPM=0)             ║");
       }
       
       Serial1.println("ACK:MOTOR:ON");
-      Serial.println("✓ ACK sent to TTGO");
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
     else if (incomingData == "MOTOR:OFF") {
       motorOn = false;
       analogWrite(MOTOR_PIN, 0);
-      Serial.println("\n--- MOTOR turned OFF (REAL) ---");
+      Serial.println("║  🛑 DASHBOARD TURNED STIRRING MOTOR OFF              ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.println("║  Motor Status: OFF ✗");
+      Serial.println("║  Motor PWM: 0");
       Serial1.println("ACK:MOTOR:OFF");
-      Serial.println("✓ ACK sent to TTGO");
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
 
     // ===== pH PUMP CONTROL (REAL) =====
     else if (incomingData == "PHPUMP:ON") {
       pHpumpOn = true;
-      Serial.println("\n--- pH PUMPS turned ON (REAL) ---");
-      Serial.println("PI controller will now control acid/base pumps.");
+      Serial.println("║  💧 DASHBOARD TURNED pH PUMPS ON                     ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.println("║  Pump Status: ON ✓");
+      Serial.println("║  PI Controller: ACTIVE");
+      Serial.println("║  Target pH: " + String(pHset, 1));
+      Serial.println("║  Acid Pump (D5): READY");
+      Serial.println("║  Base Pump (D4): READY");
       Serial1.println("ACK:PHPUMP:ON");
-      Serial.println("✓ ACK sent to TTGO");
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
     else if (incomingData == "PHPUMP:OFF") {
       pHpumpOn = false;
       analogWrite(MOTOR_A_PIN, 0);
       analogWrite(MOTOR_B_PIN, 0);
-      Serial.println("\n--- pH PUMPS turned OFF (REAL) ---");
+      Serial.println("║  💧 DASHBOARD TURNED pH PUMPS OFF                    ║");
+      Serial.println("╠═══════════════════════════════════════════════════════╣");
+      Serial.println("║  Pump Status: OFF ✗");
+      Serial.println("║  Acid Pump PWM: 0");
+      Serial.println("║  Base Pump PWM: 0");
       Serial1.println("ACK:PHPUMP:OFF");
-      Serial.println("✓ ACK sent to TTGO");
+      Serial.println("║  ✓ ACK sent back to dashboard                        ║");
     }
 
-    // ===== ACKNOWLEDGMENT/ERROR FROM TTGO =====
+    // ===== ACKNOWLEDGMENT FROM TTGO =====
     else if (incomingData.startsWith("ACK:")) {
-      Serial.print("✓ ACK from TTGO: ");
-      Serial.println(incomingData);
-    }
-    else if (incomingData.startsWith("ERROR:")) {
-      Serial.print("✗ Error from TTGO: ");
-      Serial.println(incomingData);
+      Serial.println("║  ✓ Acknowledgment from TTGO Gateway                  ║");
+      Serial.println("║  " + incomingData);
     }
 
     // ===== UNKNOWN COMMAND =====
     else {
-      Serial.println("⚠ ERROR: Unknown command");
-      Serial1.println("ERROR:UNKNOWN_COMMAND");
+      Serial.println("║  ⚠️  UNKNOWN COMMAND FROM DASHBOARD                  ║");
+      Serial.println("║  Command not recognized: " + incomingData);
     }
     
-    Serial.println("========================================\n");
+    Serial.println("╚═══════════════════════════════════════════════════════╝");
+    
+    // Print updated setpoints after command
+    printSetpoints();
   }
 }
