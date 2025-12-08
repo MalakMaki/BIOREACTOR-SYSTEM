@@ -42,8 +42,8 @@ int targetSpeedPWM = 0;
 
 // ========== PWM-TO-RPM CALIBRATION TABLE ==========
 const int calibrationPoints = 6;
-int calibrationRPM[6] = {0,   200,  400,  600,  900,  1200};
-int calibrationPWM[6] = {0,    40,   60,   80,  110,   135};
+int calibrationRPM[7] = {0,   200,  400,  600,  900,  1200, 1500};
+int calibrationPWM[7] = {0,    40,   60,   80,  110,   135,  180};
 
 // ========== HEATING SUBSYSTEM (PI CONTROLLER) ==========
 const float Vcc = 5.0;
@@ -76,7 +76,7 @@ const float pH_deadband = 0.02;
 
 // Motor speed parameters
 const int MIN_MOTOR_SPEED = 10;
-const int MOTOR_OFFSET = 70;
+const int MOTOR_OFFSET = 85;
 const int MAX_MOTOR_SPEED = 255;
 
 float voltage_pH, pH_raw, pHsmoothed = 7.0;
@@ -276,7 +276,7 @@ void loop() {
     
     // Calculate temperature
     Rth = R * Vadc / (Vcc - Vadc);
-    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 + 25.54;;
+    T = (To + 273.0) * beta / (beta + (To + 273.0) * log(Rth / Ro)) - 273.0 - 24.46;
     temperature = T;
     
     // PI Controller
